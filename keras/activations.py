@@ -72,6 +72,10 @@ def hard_sigmoid(x):
     return K.hard_sigmoid(x)
 
 
+def exp(x):
+    return K.exp(x)
+
+
 def linear(x):
     return x
 

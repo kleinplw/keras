@@ -135,6 +135,8 @@ class Recurrent(Layer):
             in your model, you would need to specify the input length
             at the level of the first layer
             (e.g. via the `input_shape` argument)
+        variable_initial_state: Boolean (default False). If True, the first state
+            is filled with learnable parameters instead of zeros.
 
     # Input shapes
         3D tensor with shape `(batch_size, timesteps, input_dim)`,
@@ -412,6 +414,7 @@ class Recurrent(Layer):
                   'go_backwards': self.go_backwards,
                   'stateful': self.stateful,
                   'unroll': self.unroll,
+                  'variable_initial_state': self.variable_initial_state,
                   'implementation': self.implementation}
         base_config = super(Recurrent, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
@@ -434,6 +437,9 @@ class SimpleRNN(Recurrent):
             weights matrix,
             used for the linear transformation of the recurrent state.
             (see [initializers](../initializers.md)).
+        state_initializer: Initializer for the weights of the initial state if 'variable_initial_state'
+            is set to true.
+            (see [initializers](../initializers.md)).
         bias_initializer: Initializer for the bias vector
             (see [initializers](../initializers.md)).
         kernel_regularizer: Regularizer function applied to
@@ -441,6 +447,8 @@ class SimpleRNN(Recurrent):
             (see [regularizer](../regularizers.md)).
         recurrent_regularizer: Regularizer function applied to
             the `recurrent_kernel` weights matrix
+            (see [regularizer](../regularizers.md)).
+        state_regularizer: Regularizer function applied on the weights of the initial state.
             (see [regularizer](../regularizers.md)).
         bias_regularizer: Regularizer function applied to the bias vector
             (see [regularizer](../regularizers.md)).
@@ -452,6 +460,8 @@ class SimpleRNN(Recurrent):
             (see [constraints](../constraints.md)).
         recurrent_constraint: Constraint function applied to
             the `recurrent_kernel` weights matrix
+            (see [constraints](../constraints.md)).
+        state_constraint: Constraint function applied on the weights of the state vector.
             (see [constraints](../constraints.md)).
         bias_constraint: Constraint function applied to the bias vector
             (see [constraints](../constraints.md)).
@@ -472,7 +482,7 @@ class SimpleRNN(Recurrent):
                  use_bias=True,
                  kernel_initializer='glorot_uniform',
                  recurrent_initializer='orthogonal',
-                 state_initializer='glorot_uniform',
+                 state_initializer='zeros',
                  bias_initializer='zeros',
                  kernel_regularizer=None,
                  recurrent_regularizer=None,
@@ -628,13 +638,16 @@ class SimpleRNN(Recurrent):
                   'use_bias': self.use_bias,
                   'kernel_initializer': initializers.serialize(self.kernel_initializer),
                   'recurrent_initializer': initializers.serialize(self.recurrent_initializer),
+                  'state_initializer': initializers.serialize(self.state_initializer),
                   'bias_initializer': initializers.serialize(self.bias_initializer),
                   'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),
                   'recurrent_regularizer': regularizers.serialize(self.recurrent_regularizer),
+                  'state_regularizer': regularizers.serialize(self.state_regularizer),
                   'bias_regularizer': regularizers.serialize(self.bias_regularizer),
                   'activity_regularizer': regularizers.serialize(self.activity_regularizer),
                   'kernel_constraint': constraints.serialize(self.kernel_constraint),
                   'recurrent_constraint': constraints.serialize(self.recurrent_constraint),
+                  'state_constraint': constraints.serialize(self.state_constraint),
                   'bias_constraint': constraints.serialize(self.bias_constraint),
                   'dropout': self.dropout,
                   'recurrent_dropout': self.recurrent_dropout}
@@ -662,6 +675,9 @@ class GRU(Recurrent):
             weights matrix,
             used for the linear transformation of the recurrent state.
             (see [initializers](../initializers.md)).
+        state_initializer: Initializer for the weights of the initial state if 'variable_initial_state'
+            is set to true.
+            (see [initializers](../initializers.md)).
         bias_initializer: Initializer for the bias vector
             (see [initializers](../initializers.md)).
         kernel_regularizer: Regularizer function applied to
@@ -669,6 +685,8 @@ class GRU(Recurrent):
             (see [regularizer](../regularizers.md)).
         recurrent_regularizer: Regularizer function applied to
             the `recurrent_kernel` weights matrix
+            (see [regularizer](../regularizers.md)).
+        state_regularizer: Regularizer function applied on the weights of the initial state.
             (see [regularizer](../regularizers.md)).
         bias_regularizer: Regularizer function applied to the bias vector
             (see [regularizer](../regularizers.md)).
@@ -680,6 +698,8 @@ class GRU(Recurrent):
             (see [constraints](../constraints.md)).
         recurrent_constraint: Constraint function applied to
             the `recurrent_kernel` weights matrix
+            (see [constraints](../constraints.md)).
+        state_constraint: Constraint function applied on the weights of the state vector.
             (see [constraints](../constraints.md)).
         bias_constraint: Constraint function applied to the bias vector
             (see [constraints](../constraints.md)).
@@ -703,7 +723,7 @@ class GRU(Recurrent):
                  use_bias=True,
                  kernel_initializer='glorot_uniform',
                  recurrent_initializer='orthogonal',
-                 state_initializer='glorot_uniform',
+                 state_initializer='zeros',
                  bias_initializer='zeros',
                  kernel_regularizer=None,
                  recurrent_regularizer=None,
@@ -911,13 +931,16 @@ class GRU(Recurrent):
                   'use_bias': self.use_bias,
                   'kernel_initializer': initializers.serialize(self.kernel_initializer),
                   'recurrent_initializer': initializers.serialize(self.recurrent_initializer),
+                  'state_initializer': initializers.serialize(self.state_initializer),
                   'bias_initializer': initializers.serialize(self.bias_initializer),
                   'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),
                   'recurrent_regularizer': regularizers.serialize(self.recurrent_regularizer),
+                  'state_regularizer': regularizers.serialize(self.state_regularizer),
                   'bias_regularizer': regularizers.serialize(self.bias_regularizer),
                   'activity_regularizer': regularizers.serialize(self.activity_regularizer),
                   'kernel_constraint': constraints.serialize(self.kernel_constraint),
                   'recurrent_constraint': constraints.serialize(self.recurrent_constraint),
+                  'state_constraint': constraints.serialize(self.state_constraint),
                   'bias_constraint': constraints.serialize(self.bias_constraint),
                   'dropout': self.dropout,
                   'recurrent_dropout': self.recurrent_dropout}
@@ -948,6 +971,9 @@ class LSTM(Recurrent):
             weights matrix,
             used for the linear transformation of the recurrent state.
             (see [initializers](../initializers.md)).
+        state_initializer: Initializer for the weights of the initial state if 'variable_initial_state'
+            is set to true.
+            (see [initializers](../initializers.md)).
         bias_initializer: Initializer for the bias vector
             (see [initializers](../initializers.md)).
         unit_forget_bias: Boolean.
@@ -960,6 +986,8 @@ class LSTM(Recurrent):
         recurrent_regularizer: Regularizer function applied to
             the `recurrent_kernel` weights matrix
             (see [regularizer](../regularizers.md)).
+        state_regularizer: Regularizer function applied on the weights of the initial state.
+            (see [regularizer](../regularizers.md)).
         bias_regularizer: Regularizer function applied to the bias vector
             (see [regularizer](../regularizers.md)).
         activity_regularizer: Regularizer function applied to
@@ -970,6 +998,8 @@ class LSTM(Recurrent):
             (see [constraints](../constraints.md)).
         recurrent_constraint: Constraint function applied to
             the `recurrent_kernel` weights matrix
+            (see [constraints](../constraints.md)).
+        state_constraint: Constraint function applied on the weights of the state vector.
             (see [constraints](../constraints.md)).
         bias_constraint: Constraint function applied to the bias vector
             (see [constraints](../constraints.md)).
@@ -993,7 +1023,7 @@ class LSTM(Recurrent):
                  use_bias=True,
                  kernel_initializer='glorot_uniform',
                  recurrent_initializer='orthogonal',
-                 state_initializer='glorot_uniform',
+                 state_initializer='zeros',
                  bias_initializer='zeros',
                  unit_forget_bias=True,
                  kernel_regularizer=None,
@@ -1051,6 +1081,7 @@ class LSTM(Recurrent):
             self.reset_states()
 
         if self.variable_initial_state:
+            # TODO: Separate Initializer / Regularizer / Constraint for memory and state
             self.initial_state = [self.add_weight(shape=(self.units, ),
                                                  name='h0',
                                                  initializer=self.state_initializer,
@@ -1256,16 +1287,216 @@ class LSTM(Recurrent):
                   'use_bias': self.use_bias,
                   'kernel_initializer': initializers.serialize(self.kernel_initializer),
                   'recurrent_initializer': initializers.serialize(self.recurrent_initializer),
+                  'state_initializer': initializers.serialize(self.state_initializer),
                   'bias_initializer': initializers.serialize(self.bias_initializer),
                   'unit_forget_bias': self.unit_forget_bias,
                   'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),
                   'recurrent_regularizer': regularizers.serialize(self.recurrent_regularizer),
+                  'state_regularizer': regularizers.serialize(self.state_regularizer),
                   'bias_regularizer': regularizers.serialize(self.bias_regularizer),
                   'activity_regularizer': regularizers.serialize(self.activity_regularizer),
                   'kernel_constraint': constraints.serialize(self.kernel_constraint),
                   'recurrent_constraint': constraints.serialize(self.recurrent_constraint),
+                  'state_constraint': constraints.serialize(self.state_constraint),
                   'bias_constraint': constraints.serialize(self.bias_constraint),
                   'dropout': self.dropout,
                   'recurrent_dropout': self.recurrent_dropout}
+
         base_config = super(LSTM, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
+
+class RWA(Recurrent):
+    """Recurrent Weighted Average unit - Ostmeyer 2017
+
+    # Arguments
+        units: Positive integer, dimensionality of the output space.
+        activation: Activation function to use
+            (see [activations](../activations.md)).
+            If you pass None, no activation is applied
+            (ie. "linear" activation: `a(x) = x`).
+        recurrent_activation: Activation function to use
+            for the recurrent step
+            (see [activations](../activations.md)).
+        attention_activation: Activation function to use
+            for the attention over the new input.
+            (see [activations](../activations.md)).
+        kernel_initializer: Initializer for the `kernel` weights matrix,
+            used for the linear transformation of the inputs.
+            (see [initializers](../initializers.md)).
+        recurrent_initializer: Initializer for the `recurrent_kernel`
+            weights matrix,
+            used for the linear transformation of the recurrent state.
+            (see [initializers](../initializers.md)).
+        state_initializer: Initializer for the weights of the initial state if 'variable_initial_state'
+            is set to true.
+            (see [initializers](../initializers.md)).
+        bias_initializer: Initializer for the bias vector
+            (see [initializers](../initializers.md)).
+        kernel_regularizer: Regularizer function applied to
+            the `kernel` weights matrix
+            (see [regularizer](../regularizers.md)).
+        recurrent_regularizer: Regularizer function applied to
+            the `recurrent_kernel` weights matrix
+            (see [regularizer](../regularizers.md)).
+        state_regularizer: Regularizer function applied on the weights of the initial state.
+            (see [regularizer](../regularizers.md)).
+        bias_regularizer: Regularizer function applied to the bias vector
+            (see [regularizer](../regularizers.md)).
+        kernel_constraint: Constraint function applied to
+            the `kernel` weights matrix
+            (see [constraints](../constraints.md)).
+        recurrent_constraint: Constraint function applied to
+            the `recurrent_kernel` weights matrix
+        state_constraint: Constraint function applied on the weights of the initial state.
+            (see [constraints](../constraints.md)).
+        bias_constraint: Constraint function applied to the bias vector
+            (see [constraints](../constraints.md)).
+
+    # References
+        - [Machine Learning on Sequential Data Using a Recurrent Weighted Average](https://arxiv.org/abs/1703.01253)
+    """
+    @interfaces.legacy_recurrent_support
+    def __init__(self, units,
+                 recurrent_activation='tanh',
+                 activation='tanh',
+                 attention_activation='exp',
+                 kernel_initializer='glorot_uniform',
+                 recurrent_initializer='orthogonal',
+                 state_initializer='zeros',
+                 bias_initializer='zeros',
+                 kernel_regularizer=None,
+                 recurrent_regularizer=None,
+                 state_regularizer=None,
+                 bias_regularizer=None,
+                 kernel_constraint=None,
+                 recurrent_constraint=None,
+                 state_constraint=None,
+                 bias_constraint=None,
+                 **kwargs):
+        super(RWA, self).__init__(**kwargs)
+        self.units = units
+        self.recurrent_activation = activations.get(recurrent_activation)
+        self.activation = activations.get(activation)
+        self.attention_activation = activations.get(attention_activation)
+
+        self.kernel_initializer = initializers.get(kernel_initializer)
+        self.recurrent_initializer = initializers.get(recurrent_initializer)
+        self.state_initializer = initializers.get(state_initializer)
+        self.bias_initializer = initializers.get(bias_initializer)
+
+        self.kernel_regularizer = regularizers.get(kernel_regularizer)
+        self.recurrent_regularizer = regularizers.get(recurrent_regularizer)
+        self.state_regularizer = regularizers.get(state_regularizer)
+        self.bias_regularizer = regularizers.get(bias_regularizer)
+
+        self.kernel_constraint = constraints.get(kernel_constraint)
+        self.recurrent_constraint = constraints.get(recurrent_constraint)
+        self.state_constraint = constraints.get(state_constraint)
+        self.bias_constraint = constraints.get(bias_constraint)
+
+        self.state_spec = [InputSpec(shape=(None, self.units)),
+                           InputSpec(shape=(None, self.units)),
+                           InputSpec(shape=(None, self.units))]
+
+    def build(self, input_shape):
+        if isinstance(input_shape, list):
+            input_shape = input_shape[0]
+
+        batch_size = input_shape[0] if self.stateful else None
+        self.input_dim = input_shape[2]
+        self.input_spec[0] = InputSpec(shape=(batch_size, None, self.input_dim))
+
+        self.states = [None, None, None]
+        if self.stateful:
+            self.reset_states()
+
+        if self.variable_initial_state:
+            self.initial_state = [self.add_weight(shape=(self.units,),
+                                                  name='h0',
+                                                  initializer=self.state_initializer,
+                                                  regularizer=self.state_regularizer,
+                                                  constraint=self.state_constraint),
+                                  self.add_weight(shape=(self.units,),
+                                                  name='n0',
+                                                  initializer=self.state_initializer,
+                                                  regularizer=self.state_regularizer,
+                                                  constraint=self.state_constraint),
+                                  self.add_weight(shape=(self.units,),
+                                                  name='d0',
+                                                  initializer=self.state_initializer,
+                                                  regularizer=self.state_regularizer,
+                                                  constraint=self.state_constraint)]
+
+        self.recurrent_kernel = self.add_weight(shape=(self.input_dim + self.units, self.units),
+                                        name='kernel_g',
+                                        initializer=self.recurrent_initializer,
+                                        regularizer=self.recurrent_regularizer,
+                                        constraint=self.recurrent_constraint)
+
+        self.kernel = self.add_weight(shape=(self.input_dim, self.units,),
+                                        name='kernel_u',
+                                        initializer=self.kernel_initializer,
+                                        regularizer=self.kernel_regularizer,
+                                        constraint=self.kernel_constraint)
+
+        self.kernel_a = self.add_weight(shape=(self.input_dim + self.units, self.units),
+                                        name='kernel_a',
+                                        initializer=self.kernel_initializer,
+                                        regularizer=self.kernel_regularizer,
+                                        constraint=self.kernel_constraint)
+
+        self.bias = self.add_weight(shape=(self.units * 2,),
+                                    name='bias',
+                                    initializer=self.bias_initializer,
+                                    regularizer=self.bias_regularizer,
+                                    constraint=self.bias_constraint)
+
+        self.bias_kernel = self.bias[:self.units]
+        self.bias_recurrent_kernel = self.bias[self.units:]
+
+        self.built = True
+
+    def preprocess_input(self, inputs, training=None):
+        return inputs
+
+    def get_constants(self, inputs, training=None):
+        constants = []
+        return constants
+
+    def step(self, inputs, states):
+        h_tm1 = states[0]
+        n_tm1 = states[1]
+        d_tm1 = states[2]
+
+        x_h = K.concatenate([inputs, h_tm1], axis=-1)
+
+        x_u = K.dot(inputs, self.kernel) + self.bias_kernel
+        xh_g = K.dot(x_h, self.recurrent_kernel) + self.bias_recurrent_kernel
+        xh_a = K.dot(x_h, self.kernel_a)
+
+        xh_z = x_u * self.activation(xh_g)
+
+        n_t = n_tm1 + xh_z * self.attention_activation(xh_a)
+        d_t = d_tm1 + self.attention_activation(xh_a)
+        h_t = n_t / d_t
+        h_t = self.recurrent_activation(h_t)
+
+        return h_t, [h_t, n_t, d_t]
+
+    def get_config(self):
+        config = {'units': self.units,
+                  'recurrent_activation': activations.serialize(self.recurrent_activation),
+                  'activation': activations.serialize(self.activation),
+                  'attention_activation': activations.serialize(self.attention_activation),
+                  'kernel_initializer': initializers.serialize(self.kernel_initializer),
+                  'state_initializer': initializers.serialize(self.state_initializer),
+                  'bias_initializer': initializers.serialize(self.bias_initializer),
+                  'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),
+                  'state_regularizer': regularizers.serialize(self.state_regularizer),
+                  'bias_regularizer': regularizers.serialize(self.bias_regularizer),
+                  'kernel_constraint': constraints.serialize(self.kernel_constraint),
+                  'state_constraint': constraints.serialize(self.state_constraint),
+                  'bias_constraint': constraints.serialize(self.bias_constraint)}
+        base_config = super(RWA, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
