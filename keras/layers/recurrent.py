@@ -247,8 +247,9 @@ class Recurrent(Layer):
         initial_state = K.expand_dims(initial_state)  # (samples, 1)
         initial_state = K.tile(initial_state, [1, self.units])  # (samples, output_dim)
         if self.variable_initial_state:
-            initial_state = initial_state + self.initial_state
-        initial_state = [initial_state for _ in range(len(self.states))]
+            initial_state = [initial_state + state for state in self.initial_state]
+        else:
+            initial_state = [initial_state for _ in range(len(self.states))]
         return initial_state
 
     def preprocess_input(self, inputs, training=None):
@@ -523,11 +524,11 @@ class SimpleRNN(Recurrent):
             self.reset_states()
 
         if self.variable_initial_state:
-            self.initial_state = self.add_weight(shape=(self.units, ),
-                                                 name='init',
+            self.initial_state = [self.add_weight(shape=(self.units, ),
+                                                 name='h0',
                                                  initializer=self.state_initializer,
                                                  regularizer=self.state_regularizer,
-                                                 constraint=self.state_constraint)
+                                                 constraint=self.state_constraint)]
 
         self.kernel = self.add_weight(shape=(self.input_dim, self.units),
                                       name='kernel',
@@ -755,11 +756,11 @@ class GRU(Recurrent):
             self.reset_states()
 
         if self.variable_initial_state:
-            self.initial_state = self.add_weight(shape=(self.units, ),
-                                                 name='init',
+            self.initial_state = [self.add_weight(shape=(self.units, ),
+                                                 name='h0',
                                                  initializer=self.state_initializer,
                                                  regularizer=self.state_regularizer,
-                                                 constraint=self.state_constraint)
+                                                 constraint=self.state_constraint)]
 
         self.kernel = self.add_weight(shape=(self.input_dim, self.units * 3),
                                       name='kernel',
@@ -1050,11 +1051,16 @@ class LSTM(Recurrent):
             self.reset_states()
 
         if self.variable_initial_state:
-            self.initial_state = self.add_weight(shape=(self.units, ),
-                                                 name='init',
+            self.initial_state = [self.add_weight(shape=(self.units, ),
+                                                 name='h0',
                                                  initializer=self.state_initializer,
                                                  regularizer=self.state_regularizer,
-                                                 constraint=self.state_constraint)
+                                                 constraint=self.state_constraint),
+                                  self.add_weight(shape=(self.units,),
+                                                  name='c0',
+                                                  initializer=self.state_initializer,
+                                                  regularizer=self.state_regularizer,
+                                                  constraint=self.state_constraint)]
 
         self.kernel = self.add_weight(shape=(self.input_dim, self.units * 4),
                                       name='kernel',
