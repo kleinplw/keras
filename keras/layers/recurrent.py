@@ -193,6 +193,7 @@ class Recurrent(Layer):
                  stateful=False,
                  unroll=False,
                  implementation=0,
+                 variable_initial_state=False,
                  **kwargs):
         super(Recurrent, self).__init__(**kwargs)
         self.return_sequences = return_sequences
@@ -207,6 +208,7 @@ class Recurrent(Layer):
         self.state_spec = None
         self.dropout = 0
         self.recurrent_dropout = 0
+        self.variable_initial_state = variable_initial_state
 
     def compute_output_shape(self, input_shape):
         if isinstance(input_shape, list):
@@ -240,11 +242,12 @@ class Recurrent(Layer):
         return []
 
     def get_initial_state(self, inputs):
-        # build an all-zero tensor of shape (samples, output_dim)
         initial_state = K.zeros_like(inputs)  # (samples, timesteps, input_dim)
         initial_state = K.sum(initial_state, axis=(1, 2))  # (samples,)
         initial_state = K.expand_dims(initial_state)  # (samples, 1)
         initial_state = K.tile(initial_state, [1, self.units])  # (samples, output_dim)
+        if self.variable_initial_state:
+            initial_state = initial_state + self.initial_state
         initial_state = [initial_state for _ in range(len(self.states))]
         return initial_state
 
@@ -468,13 +471,16 @@ class SimpleRNN(Recurrent):
                  use_bias=True,
                  kernel_initializer='glorot_uniform',
                  recurrent_initializer='orthogonal',
+                 state_initializer='glorot_uniform',
                  bias_initializer='zeros',
                  kernel_regularizer=None,
                  recurrent_regularizer=None,
+                 state_regularizer=None,
                  bias_regularizer=None,
                  activity_regularizer=None,
                  kernel_constraint=None,
                  recurrent_constraint=None,
+                 state_constraint=None,
                  bias_constraint=None,
                  dropout=0.,
                  recurrent_dropout=0.,
@@ -486,15 +492,18 @@ class SimpleRNN(Recurrent):
 
         self.kernel_initializer = initializers.get(kernel_initializer)
         self.recurrent_initializer = initializers.get(recurrent_initializer)
+        self.state_initializer = initializers.get(state_initializer)
         self.bias_initializer = initializers.get(bias_initializer)
 
         self.kernel_regularizer = regularizers.get(kernel_regularizer)
         self.recurrent_regularizer = regularizers.get(recurrent_regularizer)
+        self.state_regularizer = regularizers.get(state_regularizer)
         self.bias_regularizer = regularizers.get(bias_regularizer)
         self.activity_regularizer = regularizers.get(activity_regularizer)
 
         self.kernel_constraint = constraints.get(kernel_constraint)
         self.recurrent_constraint = constraints.get(recurrent_constraint)
+        self.state_constraint = constraints.get(state_constraint)
         self.bias_constraint = constraints.get(bias_constraint)
 
         self.dropout = min(1., max(0., dropout))
@@ -512,6 +521,13 @@ class SimpleRNN(Recurrent):
         self.states = [None]
         if self.stateful:
             self.reset_states()
+
+        if self.variable_initial_state:
+            self.initial_state = self.add_weight(shape=(self.units, ),
+                                                 name='init',
+                                                 initializer=self.state_initializer,
+                                                 regularizer=self.state_regularizer,
+                                                 constraint=self.state_constraint)
 
         self.kernel = self.add_weight(shape=(self.input_dim, self.units),
                                       name='kernel',
@@ -686,13 +702,16 @@ class GRU(Recurrent):
                  use_bias=True,
                  kernel_initializer='glorot_uniform',
                  recurrent_initializer='orthogonal',
+                 state_initializer='glorot_uniform',
                  bias_initializer='zeros',
                  kernel_regularizer=None,
                  recurrent_regularizer=None,
+                 state_regularizer=None,
                  bias_regularizer=None,
                  activity_regularizer=None,
                  kernel_constraint=None,
                  recurrent_constraint=None,
+                 state_constraint=None,
                  bias_constraint=None,
                  dropout=0.,
                  recurrent_dropout=0.,
@@ -705,15 +724,18 @@ class GRU(Recurrent):
 
         self.kernel_initializer = initializers.get(kernel_initializer)
         self.recurrent_initializer = initializers.get(recurrent_initializer)
+        self.state_initializer = initializers.get(state_initializer)
         self.bias_initializer = initializers.get(bias_initializer)
 
         self.kernel_regularizer = regularizers.get(kernel_regularizer)
         self.recurrent_regularizer = regularizers.get(recurrent_regularizer)
+        self.state_regularizer = regularizers.get(state_regularizer)
         self.bias_regularizer = regularizers.get(bias_regularizer)
         self.activity_regularizer = regularizers.get(activity_regularizer)
 
         self.kernel_constraint = constraints.get(kernel_constraint)
         self.recurrent_constraint = constraints.get(recurrent_constraint)
+        self.state_constraint = constraints.get(state_constraint)
         self.bias_constraint = constraints.get(bias_constraint)
 
         self.dropout = min(1., max(0., dropout))
@@ -731,6 +753,13 @@ class GRU(Recurrent):
         self.states = [None]
         if self.stateful:
             self.reset_states()
+
+        if self.variable_initial_state:
+            self.initial_state = self.add_weight(shape=(self.units, ),
+                                                 name='init',
+                                                 initializer=self.state_initializer,
+                                                 regularizer=self.state_regularizer,
+                                                 constraint=self.state_constraint)
 
         self.kernel = self.add_weight(shape=(self.input_dim, self.units * 3),
                                       name='kernel',
@@ -963,14 +992,17 @@ class LSTM(Recurrent):
                  use_bias=True,
                  kernel_initializer='glorot_uniform',
                  recurrent_initializer='orthogonal',
+                 state_initializer='glorot_uniform',
                  bias_initializer='zeros',
                  unit_forget_bias=True,
                  kernel_regularizer=None,
                  recurrent_regularizer=None,
+                 state_regularizer=None,
                  bias_regularizer=None,
                  activity_regularizer=None,
                  kernel_constraint=None,
                  recurrent_constraint=None,
+                 state_constraint=None,
                  bias_constraint=None,
                  dropout=0.,
                  recurrent_dropout=0.,
@@ -983,16 +1015,19 @@ class LSTM(Recurrent):
 
         self.kernel_initializer = initializers.get(kernel_initializer)
         self.recurrent_initializer = initializers.get(recurrent_initializer)
+        self.state_initializer = initializers.get(state_initializer)
         self.bias_initializer = initializers.get(bias_initializer)
         self.unit_forget_bias = unit_forget_bias
 
         self.kernel_regularizer = regularizers.get(kernel_regularizer)
         self.recurrent_regularizer = regularizers.get(recurrent_regularizer)
+        self.state_regularizer = regularizers.get(state_regularizer)
         self.bias_regularizer = regularizers.get(bias_regularizer)
         self.activity_regularizer = regularizers.get(activity_regularizer)
 
         self.kernel_constraint = constraints.get(kernel_constraint)
         self.recurrent_constraint = constraints.get(recurrent_constraint)
+        self.state_constraint = constraints.get(state_constraint)
         self.bias_constraint = constraints.get(bias_constraint)
 
         self.dropout = min(1., max(0., dropout))
@@ -1011,6 +1046,13 @@ class LSTM(Recurrent):
         self.states = [None, None]
         if self.stateful:
             self.reset_states()
+
+        if self.variable_initial_state:
+            self.initial_state = self.add_weight(shape=(self.units, ),
+                                                 name='init',
+                                                 initializer=self.state_initializer,
+                                                 regularizer=self.state_regularizer,
+                                                 constraint=self.state_constraint)
 
         self.kernel = self.add_weight(shape=(self.input_dim, self.units * 4),
                                       name='kernel',
