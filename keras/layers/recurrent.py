@@ -1003,6 +1003,8 @@ class LSTM(Recurrent):
             (see [constraints](../constraints.md)).
         bias_constraint: Constraint function applied to the bias vector
             (see [constraints](../constraints.md)).
+        use_peepholes: Adds extra connections from
+            the memory vector to the input of the gates.
         dropout: Float between 0 and 1.
             Fraction of the units to drop for
             the linear transformation of the inputs.
@@ -1015,6 +1017,7 @@ class LSTM(Recurrent):
         - [Learning to forget: Continual prediction with LSTM](http://www.mitpressjournals.org/doi/pdf/10.1162/089976600300015015)
         - [Supervised sequence labeling with recurrent neural networks](http://www.cs.toronto.edu/~graves/preprint.pdf)
         - [A Theoretically Grounded Application of Dropout in Recurrent Neural Networks](http://arxiv.org/abs/1512.05287)
+        - [Learning Precise Timing with LSTM Recurrent Networks] (http://www.jmlr.org/papers/volume3/gers02a/gers02a.pdf)
     """
     @interfaces.legacy_recurrent_support
     def __init__(self, units,
