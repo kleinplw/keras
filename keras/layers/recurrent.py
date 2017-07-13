@@ -1004,6 +1004,7 @@ class LSTM(Recurrent):
                  recurrent_constraint=None,
                  state_constraint=None,
                  bias_constraint=None,
+                 use_peepholes=False,
                  dropout=0.,
                  recurrent_dropout=0.,
                  **kwargs):
@@ -1030,6 +1031,7 @@ class LSTM(Recurrent):
         self.state_constraint = constraints.get(state_constraint)
         self.bias_constraint = constraints.get(bias_constraint)
 
+        self.use_peepholes = use_peepholes
         self.dropout = min(1., max(0., dropout))
         self.recurrent_dropout = min(1., max(0., recurrent_dropout))
         self.state_spec = [InputSpec(shape=(None, self.units)),
@@ -1066,6 +1068,14 @@ class LSTM(Recurrent):
             regularizer=self.recurrent_regularizer,
             constraint=self.recurrent_constraint)
 
+        if self.use_peepholes:
+            self.peepholes = self.add_weight(
+                shape=(self.units, self.units * 4),
+                name='peepholes',
+                initializer=self.recurrent_initializer,
+                regularizer=self.recurrent_regularizer,
+                constraint=self.recurrent_constraint)
+
         if self.use_bias:
             if self.unit_forget_bias:
                 def bias_initializer(shape, *args, **kwargs):
@@ -1093,6 +1103,12 @@ class LSTM(Recurrent):
         self.recurrent_kernel_f = self.recurrent_kernel[:, self.units: self.units * 2]
         self.recurrent_kernel_c = self.recurrent_kernel[:, self.units * 2: self.units * 3]
         self.recurrent_kernel_o = self.recurrent_kernel[:, self.units * 3:]
+
+        if self.use_peepholes:
+            self.peephole_i = self.peepholes[:, :self.units]
+            self.peephole_f = self.peepholes[:, self.units: self.units * 2]
+            self.peephole_c = self.peepholes[:, self.units * 2: self.units * 3]
+            self.peephole_o = self.peepholes[:, self.units * 3:]
 
         if self.use_bias:
             self.bias_i = self.bias[:self.units]
@@ -1177,6 +1193,13 @@ class LSTM(Recurrent):
             z2 = z[:, 2 * self.units: 3 * self.units]
             z3 = z[:, 3 * self.units:]
 
+            if self.use_peepholes:
+                # TODO: Dropout on peephole connections
+                z0 += K.dot(h_tm1, self.peephole_i)
+                z1 += K.dot(h_tm1, self.peephole_f)
+                z2 += K.dot(h_tm1, self.peephole_c)
+                z3 += K.dot(h_tm1, self.peephole_o)
+
             i = self.recurrent_activation(z0)
             f = self.recurrent_activation(z1)
             c = f * c_tm1 + i * self.activation(z2)
@@ -1195,14 +1218,26 @@ class LSTM(Recurrent):
             else:
                 raise ValueError('Unknown `implementation` mode.')
 
-            i = self.recurrent_activation(x_i + K.dot(h_tm1 * rec_dp_mask[0],
-                                                      self.recurrent_kernel_i))
-            f = self.recurrent_activation(x_f + K.dot(h_tm1 * rec_dp_mask[1],
-                                                      self.recurrent_kernel_f))
-            c = f * c_tm1 + i * self.activation(x_c + K.dot(h_tm1 * rec_dp_mask[2],
-                                                            self.recurrent_kernel_c))
-            o = self.recurrent_activation(x_o + K.dot(h_tm1 * rec_dp_mask[3],
-                                                      self.recurrent_kernel_o))
+            rec_i = K.dot(h_tm1 * rec_dp_mask[0], self.recurrent_kernel_i)
+            rec_f = K.dot(h_tm1 * rec_dp_mask[1], self.recurrent_kernel_f)
+            rec_c = K.dot(h_tm1 * rec_dp_mask[2], self.recurrent_kernel_c)
+            rec_o = K.dot(h_tm1 * rec_dp_mask[3], self.recurrent_kernel_o)
+            z0 = x_i + rec_i
+            z1 = x_f + rec_f
+            z2 = x_c + rec_c
+            z3 = x_o + rec_o
+
+            if self.use_peepholes:
+                # TODO: Dropout on peephole connections
+                z0 += K.dot(h_tm1, self.peephole_i)
+                z1 += K.dot(h_tm1, self.peephole_f)
+                z2 += K.dot(h_tm1, self.peephole_c)
+                z3 += K.dot(h_tm1, self.peephole_o)
+
+            i = self.recurrent_activation(z0)
+            f = self.recurrent_activation(z1)
+            c = f * c_tm1 + i * self.activation(z2)
+            o = self.recurrent_activation(z3)
         h = o * self.activation(c)
         if 0 < self.dropout + self.recurrent_dropout:
             h._uses_learning_phase = True
